@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>F-MAIL V2.0</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<style>
+		body {
+			background-image: url("https://img.freepik.com/free-vector/realistic-galaxy-background_23-2148991322.jpg");
+			background-repeat: no-repeat;
+			background-size: cover;
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+        .custom-select {
+  width: 300px; 
+}
+        .select-label {
+  font-size: 30px; 
+}
+
+		.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  max-width: 650px;
+  height: 80%;
+  max-height: 450px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: rgba(221, 160, 221, 0.7);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+    h1 {
+  color: #6a2c70;
+  text-align: center;
+  margin-top: 0;
+  font-size: 60px; 
+}
+
+		h2 {
+			color: #6a2c70;
+		}
+
+		p {
+			margin-top: 0;
+			margin-bottom: 10px;
+		}
+
+		button {
+  background-color: #6a2c70;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 40px; /* Ajuste o tamanho da fonte conforme necessário */
+  cursor: pointer;
+}
+
+		#animation {
+			font-size: 18px;
+			text-align: center;
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>BEM VINDO AO F-MAIL V2.0</h1>
+		<p>
+			<button onclick="randomEmail()">Aleatório</button>
+			<button onclick="customEmail()">Customizado</button>
+		</p>
+	</div>
+
+	<script>
+		var list_mail = ["vintomaper.com", "tovinit.com", "mentonit.net"];
+		var url = "https://cryptogmail.com/";
+		var num = 0;
+
+		function get_teks(accept, key) {
+			$.ajax({
+				url: url + "api/emails/" + key,
+				headers: {"accept": accept},
+				success: function(response) {
+					if ("error" in response) {
+						return "-";
+					} else {
+						return response.trim();
+					}
+				}
+			});
+		}
+
+		function get_random(digit) {
+			var lis = "abcdefghijklmnopqrstuvwxyz0123456789".split("");
+			var dig = [];
+			for (var i = 0; i < digit; i++) {
+				dig.push(lis[Math.floor(Math.random() * lis.length)]);
+			}
+			return dig.join(""), list_mail[Math.floor(Math.random() * list_mail.length)];
+		}
+
+		function animate(teks) {
+			var lis = "\\|/-".split("");
+			var i = 0;
+			setInterval(function() {
+				document.getElementById("animation").innerHTML = "[" + lis[i] + "] " + teks + ".. ";
+				i = (i + 1) % lis.length;
+			}, 500);
+		}
+
+	var inboxTimer;
+
+function run(email) {
+  (function loop() {
+    animate("Aguardando mensagens...");
+    $.ajax({
+      url: url + "api/emails?inbox=" + email,
+      success: function (response) {
+        if ("404" in response) {
+          loop();
+        } else if ("data" in response) {
+          var z = response;
+          z["data"].forEach(function (data) {
+            console.log("[•] ID: " + data["id"]);
+            $.ajax({
+              url: url + "api/emails/" + data["id"],
+              success: function (got) {
+                var pengirim = got["data"]["sender"]["display_name"];
+                var email_pe = got["data"]["sender"]["email"];
+                var subject = got["data"]["subject"];
+                console.log("[•] Sender Name: " + pengirim);
+                console.log("[•] Sender mail: " + email_pe);
+                console.log("[•] Subject    : " + subject);
+                console.log("[•] Message    : " + got["data"]["body"]);
+                console.log("-".repeat(45));
+                document.getElementById("messages").innerHTML += `
+                  <div class="message">
+                    <h3>Remetente: ${pengirim}</h3>
+                    <p>Email: ${email_pe}</p>
+                    <p>Assunto: ${subject}</p>
+                    <p>Mensagem: ${got["data"]["body"]}</p>
+                  </div>
+                `;
+                $.ajax({
+                  url: url + "api/emails/" + data["id"],
+                  method: "DELETE",
+                  success: function () {
+                    loop();
+                  },
+                });
+              },
+            });
+          });
+        } else {
+          loop();
+        }
+      },
+    });
+  })();
+
+  // Verificar a caixa de entrada a cada 5 segundos
+  inboxTimer = setInterval(function () {
+    run(email);
+  }, 5000);
+}
+
+function stopTimer() {
+  clearInterval(inboxTimer);
+}
+
+function randomEmail() {
+  var set_name, set_email;
+  set_name = get_random(10);
+  set_email = set_name + "@" + list_mail[Math.floor(Math.random() * list_mail.length)];
+  document.body.innerHTML = `
+    <div class="container">
+      <h2>Seu Email: ${set_email}</h2>
+      <p>Nossos emails são altamente criptografados!</p>
+      <p id="animation"></p>
+      <div id="inbox" style="display: none;">
+        <h2>Suas Mensagens</h2>
+        <div id="messages"></div>
+      </div>
+    </div>
+  `;
+  run(set_email);
+}
+
+function createCustomEmail() {
+  var set_name = prompt("Nome do Email:");
+  var mailSelect = document.getElementById("mail-select");
+  var set_email = set_name + "@" + list_mail[mailSelect.value];
+  document.body.innerHTML = `
+    <div class="container">
+      <h2>Seu Email: ${set_email}</h2>
+      <p>Nossos emails são altamente criptografados!</p>
+      <p id="animation"></p>
+      <div id="inbox" style="display: none;">
+        <h2>Suas Mensagens</h2>
+        <div id="messages"></div>
+      </div>
+    </div>
+  `;
+  run(set_email);
+}
+
+function animate(teks) {
+  var lis = "\\|/-".split("");
+  var i = 0;
+  setInterval(function () {
+    document.getElementById("animation").innerHTML =
+      "[" + lis[i] + "] " + teks + ".. ";
+    i = (i + 1) % lis.length;
+  }, 500);
+}
+
+function main() {
+  document.body.innerHTML = `
+    <div class="container">
+      <h1>BEM VINDO(a) AO NOVO F-MAIL V2.0</h1>
+      <h3>Escolha a forma de geração de emails:</h3>
+      <p>
+        <button onclick="randomEmail()">Aleatório</button>
+        <button onclick="customEmail()">Customizado</button>
+      </p>
+      <div id="inbox" style="display: none;">
+        <h2>Suas Mensagens</h2>
+        <div id="messages"></div>
+      </div>
+    </div>
+  `;
+}
+
+window.onload = main;
+
+</script>
+</body>
+</html>
